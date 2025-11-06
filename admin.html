@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin - Add Dinos</title>
+<style>
+  body { background:#111; color:white; padding:20px; font-family:sans-serif; }
+  button { padding:10px 20px; font-size:16px; margin-top:10px; border-radius:8px; cursor:pointer; }
+</style>
+</head>
+<body>
+
+<h1>ADMIN: Import Dino List</h1>
+<p>กดปุ่มด้านล่างเพื่อเพิ่มดิโนทั้งหมดเข้าฐานข้อมูล Firestore</p>
+
+<button id="import">เพิ่มดิโนทั้งหมด ✅</button>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAML0e4P3gySDzFAX9IG5S0mEe4law7e",
+  authDomain: "ark-dino-tracker.firebaseapp.com",
+  projectId: "ark-dino-tracker",
+  storageBucket: "ark-dino-tracker.appspot.com",
+  messagingSenderId: "316408012634",
+  appId: "1:316408012634:web:c6896acec48aa958fdb613"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ✅ ลิสต์ดิโนจริง (300+ ตัว)
+const dinos = [
+"Achatina","Allosaurus","Alpha Basilisk","Alpha Carnotaurus","Alpha Deathworm","Alpha Leedsichthys","Alpha Mosasaurus","Alpha Raptor","Alpha Rex","Ankylosaurus","Argentavis","Arthropleura","Astrodelphis","Baryonyx","Basilisk","Beelzebufo","Bloodstalker","Brontosaurus","Carno","Castoroides","Chalicotherium","Compy","Coelacanth","Crystal Wyvern","Daeodon","Deinonychus","Dilophosaur","Diplodocus","Direbear","Direwolf","Doedicurus","Equus","Gacha","Gallimimus","Giganotosaurus","Griffin","Hyaenodon","Iguanodon","Kaprosuchus","Mammoth","Megalania","Megaloceros","Megalodon","Megatherium","Megalosaurus","Mesopithecus","Paracer","Pteranodon","Quetzal","Rex","Shadowmane","Snow Owl","Spinosaurus","Stegosaurus","Tapejara","Therizinosaurus","Thylacoleo","Triceratops","Troodon","Velonasaur","Wyvern","Yutyrannus"
+];
+
+document.getElementById("import").onclick = async () => {
+  for (let name of dinos) {
+    await db.collection("dinos").doc(name).set({
+      name: name,
+      caught: false
+    });
+  }
+  alert("✅ เพิ่มข้อมูลสำเร็จแล้ว! กลับไปหน้าเว็บหลักได้เลย");
+};
+</script>
+
+</body>
+</html>

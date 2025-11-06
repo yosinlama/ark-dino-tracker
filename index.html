@@ -1,86 +1,90 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8">
 <title>ARK Dino Tracker</title>
-
-<!-- Firebase -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-  import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-  import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyAMLeQfaP3gySD5zFXJX1GS5m0Erla4w7g",
-    authDomain: "ark-dino-tracker.firebaseapp.com",
-    projectId: "ark-dino-tracker",
-    storageBucket: "ark-dino-tracker.firebasestorage.app",
-    messagingSenderId: "316048016234",
-    appId: "1:316048016234:web:c689cfaec48daa958fdb13"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-
-  const dinos = [
-"Achatina","Allosaurus","Alpha Basilisk","Alpha Carnotaurus","Alpha Deathworm","Alpha Leedsichthys","Alpha Mosasaurus","Alpha Raptor","Alpha Rex","Alpha Tusoteuthis","Amargasaurus","Ankylosaurus","Andrewsarchus","Angler","Araneo","Archaeopteryx","Argentavis","Arthropleura","Astrodelphis","Astrocetus","Baryonyx","Basilisk","Basilosaurus","Beelzebufo","Bloodstalker","Brontosaurus","Bulbdog","Carcharodontosaurus","Carbonemys","Carnotaurus","Castoroides","Chalicotherium","Compy","Coelacanth","Cnidaria","Crystal Wyvern","Daeodon","Deinonychus","Dilophosaur","Dimetrodon","Dimorphodon","Diplocaulus","Diplodocus","Direbear","Direwolf","Doedicurus","Dodo","Dunkleosteus","Electrophorus","Enforcer","Equus","Eurypterid","Featherlight","Ferox","Fjordhawk","Gacha","Gallimimus","Gasbags","Giganotosaurus","Gigantopithecus","Glowtail","Griffin","Hesperornis","Hyaenodon","Ichthyornis","Ichthyosaurus","Iguanodon","Jerboa","Kaprosuchus","Karkinos","Kentrosaurus","Lymantria","Leedsichthys","Lystrosaurus","Maewing","Magmasaur","Mammoth","Managarmr","Manta","Mantis","Megachelon","Megalania","Megaloceros","Megalodon","Megalosaurus","Megatherium","Mesopithecus","Microraptor","Mosasaurus","Moschops","Nameless","Noglin","Onyc","Otter","Oviraptor","Ovis","Pachy","Pachyrhinosaurus","Para","Paracer","Pegomastax","Pelagornis","Phiomia","Piranha","Plesiosaur","Procoptodon","Pteranodon","Pulmonoscorpius","Purlovia","Raptor","Ravager","Reaper","Rex","Rock Drake","Rock Elemental","Roll Rat","Sabertooth","Sarco","Shadowmane","Shinehorn","Snow Owl","Spino","Stegosaurus","Tapejara","Terror Bird","Therizinosaurus","Thorny Dragon","Thylacoleo","Titanoboa","Titanosaur","Triceratops","Trilobite","Troodon","Tusoteuthis","Unicorn","Velonasaur","Vulture","Woolly Rhino","Wyvern","Yutyrannus"
-  ];
-
-  let currentUser = null;
-
-  onAuthStateChanged(auth, async (user) => {
-    currentUser = user;
-    document.getElementById("user").innerText = user ? user.displayName : "Not logged in";
-    if (user) load();
-  });
-
-  async function load() {
-    const ref = doc(db, "users", currentUser.uid);
-    const snap = await getDoc(ref);
-    const saved = snap.exists() ? snap.data().dinos || [] : [];
-    dinos.forEach(d => document.getElementById(d).checked = saved.includes(d));
-  }
-
-  async function save() {
-    if (!currentUser) return alert("Login first.");
-    const selected = dinos.filter(d => document.getElementById(d).checked);
-    await setDoc(doc(db, "users", currentUser.uid), { dinos: selected });
-    alert("Saved!");
-  }
-
-  window.login = () => signInWithPopup(auth, new GoogleAuthProvider());
-  window.logout = () => signOut(auth);
-  window.save = save;
-</script>
-
 <style>
-body { font-family: sans-serif; padding: 16px; }
-label { display: block; padding: 3px 0; }
+  body { font-family: Arial; margin: 20px; background: #111; color: #fff; }
+  .login-btn, .logout-btn { padding: 8px 14px; background: #4CAF50; border: none; cursor: pointer; }
+  .logout-btn { background: #e74c3c; }
+  .dino-list { margin-top: 20px; }
+  label { display: block; margin: 5px 0; }
 </style>
-
 </head>
 <body>
-<h2>ARK Dino Tracker (Google Sync)</h2>
-<button onclick="login()">Login with Google</button>
-<button onclick="logout()">Logout</button>
-<p>User: <span id="user">Not logged in</span></p>
-<hr>
 
-<div id="list"></div>
+<h1>ARK Dino Tracker</h1>
+
+<button id="loginBtn" class="login-btn">Login with Google</button>
+<button id="logoutBtn" class="logout-btn" style="display:none;">Logout</button>
+
+<p id="userDisplay"></p>
+
+<div class="dino-list" id="dinoContainer" style="display:none;">
+  <h2>Creatures</h2>
+  <label><input type="checkbox" data-name="Achatina"> Achatina</label>
+  <label><input type="checkbox" data-name="Allosaurus"> Allosaurus</label>
+  <label><input type="checkbox" data-name="Ankylosaurus"> Ankylosaurus</label>
+  <label><input type="checkbox" data-name="Argentavis"> Argentavis</label>
+  <label><input type="checkbox" data-name="Rex"> Rex</label>
+  <label><input type="checkbox" data-name="Spino"> Spino</label>
+  <label><input type="checkbox" data-name="Yutyrannus"> Yutyrannus</label>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js"></script>
 
 <script>
-  const list = document.getElementById("list");
-  const dinos = [
-"Achatina","Allosaurus","Alpha Basilisk","Alpha Carnotaurus","Alpha Deathworm","Alpha Leedsichthys","Alpha Mosasaurus","Alpha Raptor","Alpha Rex","Alpha Tusoteuthis","Amargasaurus","Ankylosaurus","Andrewsarchus","Angler","Araneo","Archaeopteryx","Argentavis","Arthropleura","Astrodelphis","Astrocetus","Baryonyx","Basilisk","Basilosaurus","Beelzebufo","Bloodstalker","Brontosaurus","Bulbdog","Carcharodontosaurus","Carbonemys","Carnotaurus","Castoroides","Chalicotherium","Compy","Coelacanth","Cnidaria","Crystal Wyvern","Daeodon","Deinonychus","Dilophosaur","Dimetrodon","Dimorphodon","Diplocaulus","Diplodocus","Direbear","Direwolf","Doedicurus","Dodo","Dunkleosteus","Electrophorus","Enforcer","Equus","Eurypterid","Featherlight","Ferox","Fjordhawk","Gacha","Gallimimus","Gasbags","Giganotosaurus","Gigantopithecus","Glowtail","Griffin","Hesperornis","Hyaenodon","Ichthyornis","Ichthyosaurus","Iguanodon","Jerboa","Kaprosuchus","Karkinos","Kentrosaurus","Lymantria","Leedsichthys","Lystrosaurus","Maewing","Magmasaur","Mammoth","Managarmr","Manta","Mantis","Megachelon","Megalania","Megaloceros","Megalodon","Megalosaurus","Megatherium","Mesopithecus","Microraptor","Mosasaurus","Moschops","Nameless","Noglin","Onyc","Otter","Oviraptor","Ovis","Pachy","Pachyrhinosaurus","Para","Paracer","Pegomastax","Pelagornis","Phiomia","Piranha","Plesiosaur","Procoptodon","Pteranodon","Pulmonoscorpius","Purlovia","Raptor","Ravager","Reaper","Rex","Rock Drake","Rock Elemental","Roll Rat","Sabertooth","Sarco","Shadowmane","Shinehorn","Snow Owl","Spino","Stegosaurus","Tapejara","Terror Bird","Therizinosaurus","Thorny Dragon","Thylacoleo","Titanoboa","Titanosaur","Triceratops","Trilobite","Troodon","Tusoteuthis","Unicorn","Velonasaur","Vulture","Woolly Rhino","Wyvern","Yutyrannus"
-  ];
+const firebaseConfig = {
+  apiKey: "AIzaSyAMLeQfaP3gySD5zFXJX1GS5m0Erla4w7g",
+  authDomain: "ark-dino-tracker.firebaseapp.com",
+  projectId: "ark-dino-tracker",
+};
 
-  dinos.forEach(d => {
-    list.innerHTML += `<label><input type="checkbox" id="${d}"> ${d}</label>`;
-  });
+const app = firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const userDisplay = document.getElementById("userDisplay");
+const dinoContainer = document.getElementById("dinoContainer");
+
+loginBtn.onclick = () => {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider);
+};
+
+logoutBtn.onclick = () => auth.signOut();
+
+auth.onAuthStateChanged(async (user) => {
+  if (user) {
+    userDisplay.innerText = "Logged in as: " + user.email;
+    loginBtn.style.display = "none";
+    logoutBtn.style.display = "inline-block";
+    dinoContainer.style.display = "block";
+
+    const docRef = db.collection("users").doc(user.uid);
+    const docSnap = await docRef.get();
+    const data = docSnap.exists ? docSnap.data().dinos || [] : [];
+
+    document.querySelectorAll("input[type='checkbox']").forEach(cb => {
+      cb.checked = data.includes(cb.dataset.name);
+      cb.onchange = async () => {
+        const newList = [...document.querySelectorAll("input:checked")].map(x => x.dataset.name);
+        await docRef.set({ dinos: newList });
+      };
+    });
+
+  } else {
+    userDisplay.innerText = "";
+    loginBtn.style.display = "inline-block";
+    logoutBtn.style.display = "none";
+    dinoContainer.style.display = "none";
+  }
+});
 </script>
-
-<button onclick="save()">Save</button>
 
 </body>
 </html>

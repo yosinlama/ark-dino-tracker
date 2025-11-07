@@ -33,7 +33,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyAMLeQfaP3gySD5zFXJX1GS5m0Erla4w7g",
   authDomain: "ark-dino-tracker.firebaseapp.com",
   projectId: "ark-dino-tracker",
-  storageBucket: "ark-dino-tracker.appspot.com",
+  storageBucket: "ark-dino-tracker.firebasestorage.app",
   messagingSenderId: "316048016234",
   appId: "1:316048016234:web:c689cfaec48daa958fdb13",
   measurementId: "G-Q1QVS7HMG6"
@@ -45,24 +45,78 @@ const db = firebase.firestore();
 
 const list = document.getElementById("dino-list");
 const search = document.getElementById("search");
-const loginBtn = document.getElementById("loginBtn");
-const logoutBtn = document.getElementById("logoutBtn");
 
-let user = null;
-let dinos = [];
-let caught = new Set();
+let currentUser = null;
+let allDinos = [];
 
-loginBtn.onclick = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
-logoutBtn.onclick = () => auth.signOut();
-
-auth.onAuthStateChanged(async(u) => {
-  user = u;
-  if (!user) {
-    loginBtn.style.display = "block";
-    logoutBtn.style.display = "none";
-    list.innerHTML = "<p>กรุณา Login เพื่อเริ่มใช้งาน</p>";
-    return;
+// Login UI
+function renderLogin() {
+  document.body.insertAdjacentHTML("afterbegin", `
+    <button id="login">Login with Google</button>
+  `);
+  document.getElementById("login").onclick = () => {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider);
   }
+}
+
+// Logout UI
+function renderLogout() {
+  document.body.insertAdjacentHTML("afterbegin", `
+    <button id="logout">Logout</button>
+  `);
+  document.getElementById("logout").onclick = () => auth.signOut();
+}
+
+auth.onAuthStateChanged(user => {
+  document.querySelectorAll("#login, #logout").forEach(el => el?.remove());
+  if (user) {
+    currentUser = user.uid;
+    renderLogout();
+    loadData();
+  } else {
+    currentUser = null;
+    renderLogin();
+    list.innerHTML = "<p>กรุณา Login ก่อน</p>";
+  }
+});
+
+// Load Firestore Data
+function loadData() {
+  db.collection("dinos").onSnapshot((snap) => {
+    allDinos = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    render(allDinos);
+  });
+}
+
+// UI Render
+function render(dinos) {
+  list.innerHTML = "";
+  dinos.forEach(d => {
+    list.innerHTML += `
+      <div class="card">
+        <div class="name">${d.name}</div>
+        <div>HP: ${d.hp}</div>
+        <div>DMG: ${d.dmg}</div>
+        <label><input type="checkbox" ${d.checked ? "checked" : ""} data-id="${d.id}"> จดจำ</label>
+      </div>
+    `;
+  });
+
+  document.querySelectorAll("input[type=checkbox]").forEach(chk => {
+    chk.onchange = (e) => {
+      const id = e.target.dataset.id;
+      db.collection("dinos").doc(id).update({ checked: e.target.checked });
+    }
+  });
+}
+
+// Search
+search.addEventListener("input", () => {
+  let q = search.value.toLowerCase();
+  render(allDinos.filter(d => d.name.toLowerCase().includes(q)));
+});
+</script>
 
   loginBtn.style.display = "none";
   logoutBtn.style.display = "block";

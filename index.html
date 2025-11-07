@@ -1,24 +1,31 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
   <meta charset="UTF-8" />
   <title>ARK Dino Tracker</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; background: #121212; color: white; }
-    input { width: 100%; padding: 10px; margin-bottom: 20px; border-radius: 8px; border: none; }
-    .card { background: #1f1f1f; padding: 15px; margin: 10px 0; border-radius: 10px; }
-    .name { font-size: 20px; font-weight: bold; }
+    body { font-family: Arial, sans-serif; background: #111; color: #fff; padding: 20px; }
+    #loginBtn { padding: 10px 20px; background: #4285F4; border: none; color: white; border-radius: 8px; cursor: pointer; }
+    #logoutBtn { padding: 6px 14px; background: #f54242; border: none; color: white; border-radius: 8px; cursor: pointer; float:right; }
+    input { width: 100%; padding: 10px; margin: 15px 0; border-radius: 6px; border: none; }
+    .card { background: #1d1d1d; padding: 12px; margin: 8px 0; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+    .name { font-weight: bold; font-size: 18px; }
   </style>
 </head>
 <body>
 
-<h1>ARK Dino Tracker</h1>
-<input type="text" id="search" placeholder="ค้นหาดิโน...">
+<h1>🦖 ARK Dino Tracker</h1>
+
+<button id="loginBtn">Login with Google</button>
+<button id="logoutBtn" style="display:none;">Logout</button>
+
+<input type="text" id="search" placeholder="ค้นหาไดโนเสาร์...">
 
 <div id="dino-list"></div>
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 
 <script>
@@ -26,42 +33,76 @@ const firebaseConfig = {
   apiKey: "AIzaSyAMLeQfaP3gySD5zFXJX1GS5m0Erla4w7g",
   authDomain: "ark-dino-tracker.firebaseapp.com",
   projectId: "ark-dino-tracker",
-  storageBucket: "ark-dino-tracker.firebasestorage.app",
+  storageBucket: "ark-dino-tracker.appspot.com",
   messagingSenderId: "316048016234",
   appId: "1:316048016234:web:c689cfaec48daa958fdb13",
   measurementId: "G-Q1QVS7HMG6"
 };
 
 firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
 const db = firebase.firestore();
 
 const list = document.getElementById("dino-list");
 const search = document.getElementById("search");
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
 
-function render(dinos) {
+let user = null;
+let dinos = [];
+let caught = new Set();
+
+loginBtn.onclick = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+logoutBtn.onclick = () => auth.signOut();
+
+auth.onAuthStateChanged(async(u) => {
+  user = u;
+  if (!user) {
+    loginBtn.style.display = "block";
+    logoutBtn.style.display = "none";
+    list.innerHTML = "<p>กรุณา Login เพื่อเริ่มใช้งาน</p>";
+    return;
+  }
+
+  loginBtn.style.display = "none";
+  logoutBtn.style.display = "block";
+
+  loadData();
+});
+
+async function loadData() {
+  const snap = await db.collection("dinos").orderBy("name").get();
+  dinos = snap.docs.map(d => d.data());
+  loadCaught();
+}
+
+async function loadCaught() {
+  const snap = await db.collection("users").doc(user.uid).collection("caught").get();
+  caught = new Set(snap.docs.map(doc => doc.id));
+  render();
+}
+
+function render() {
+  const q = search.value.toLowerCase();
   list.innerHTML = "";
-  dinos.forEach(d => {
+  dinos.filter(d => d.name.toLowerCase().includes(q)).forEach(d => {
+    const checked = caught.has(d.name) ? "checked" : "";
     list.innerHTML += `
       <div class="card">
         <div class="name">${d.name}</div>
-        <div>HP: ${d.hp}</div>
-        <div>DMG: ${d.dmg}</div>
+        <input type="checkbox" ${checked} onchange="toggleCaught('${d.name}', this)">
       </div>
     `;
   });
 }
 
-let allDinos = [];
+window.toggleCaught = async(name, box) => {
+  const ref = db.collection("users").doc(user.uid).collection("caught").doc(name);
+  if (box.checked) ref.set({ captured: true });
+  else ref.delete();
+};
 
-db.collection("dinos").onSnapshot((snap) => {
-  allDinos = snap.docs.map(doc => doc.data());
-  render(allDinos);
-});
-
-search.addEventListener("input", () => {
-  let q = search.value.toLowerCase();
-  render(allDinos.filter(d => d.name.toLowerCase().includes(q)));
-});
+search.addEventListener("input", render);
 </script>
 
 </body>
